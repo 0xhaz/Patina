@@ -1,0 +1,26 @@
+# --- Secrets (NEVER commit) ---
+**/.env
+**/.env.local
+*.key
+
+# --- Internal planning docs (not for the public/judging repo) ---
+workplan.md
+techstack-patina.md
+architecture-patina.md
+docs/alibaba-setup.md
+
+# --- Dependencies / build output ---
+**/node_modules/
+**/.next/
+**/.venv/
+**/__pycache__/
+*.py[cod]
+**/.pytest_cache/
+**/.ruff_cache/
+
+# --- Local agent / sandbox state ---
+.claude/
+mnt/
+
+# --- OS ---
+.DS_Store

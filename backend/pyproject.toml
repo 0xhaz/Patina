@@ -1,0 +1,40 @@
+[project]
+name = "patina-backend"
+version = "0.1.0"
+description = "Patina — memory-enabled vendor onboarding agent (backend)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # Model calls — OpenAI-compatible client pointed at DashScope (Singapore)
+    "openai>=1.40.0",
+    # DB + vector ops
+    "psycopg[binary]>=3.2.0",
+    "pgvector>=0.3.0",
+    # Structured extraction schemas + validation (per-field confidence)
+    "pydantic>=2.8.0",
+    "pydantic-settings>=2.4.0",
+    # Local API server (also runs under FC custom runtime)
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    # Light PDF text checks (vision model does the real extraction)
+    "pypdf>=5.0.0",
+    "pdfplumber>=0.11.0",
+    # Image handling for the vision pipeline
+    "pillow>=10.4.0",
+    # Retries/backoff on model + tool calls (error-handling = rubric points)
+    "tenacity>=9.0.0",
+    # Env loading
+    "python-dotenv>=1.0.1",
+    # MCP servers (memory + registry tool interfaces)
+    "mcp>=1.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "ruff>=0.6.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

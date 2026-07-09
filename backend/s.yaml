@@ -1,0 +1,43 @@
+# Serverless Devs spec — deploys the zero-dep proof app to Function Compute (Singapore)
+# via a plain code zip (custom runtime, no container registry, no cost).
+#   cd backend && set -a && . ./.env && set +a && s deploy -y
+# Prereqs: s config add (alias `default`) with a RAM user holding AliyunFCFullAccess.
+edition: 3.0.0
+name: patina
+access: default
+
+vars:
+  region: ap-southeast-1 # Singapore — matches the DashScope endpoint region.
+
+resources:
+  patina-api:
+    component: fc3
+    props:
+      region: ${vars.region}
+      functionName: patina-api
+      description: Patina proof deploy — Qwen on Alibaba Cloud FC
+      runtime: custom.debian10
+      code: ./proof_app # only the stdlib server is zipped/uploaded
+      handler: index.handler # unused by custom runtime; kept for schema compatibility
+      timeout: 60
+      memorySize: 1024
+      cpu: 0.5
+      diskSize: 512
+      customRuntimeConfig:
+        command:
+          - python3
+          - server.py
+        port: 9000
+      environmentVariables:
+        # Read from the shell at deploy time (sourced from .env) — never committed.
+        DASHSCOPE_API_KEY: ${env(DASHSCOPE_API_KEY)}
+        DASHSCOPE_BASE_URL: https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+        QWEN_BACKBONE_MODEL: qwen3.7-plus
+      triggers:
+        - triggerName: http
+          triggerType: http
+          triggerConfig:
+            authType: anonymous
+            methods:
+              - GET
+              - POST

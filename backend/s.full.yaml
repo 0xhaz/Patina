@@ -1,0 +1,44 @@
+# Full Patina backend on Function Compute (custom container) + ApsaraDB RDS.
+# FC reaches RDS over its PUBLIC endpoint (RDS whitelist 0.0.0.0/0 during the demo;
+# FC has public egress) — so NO VPC wiring is needed. Tighten the whitelist after judging.
+#
+#   cd backend && set -a && . ./.env && set +a && s -t s.full.yaml deploy
+#
+# Prereqs: image pushed to a registry FC can pull (e.g. public Docker Hub), and the
+# IMAGE var below pointed at it.
+edition: 3.0.0
+name: patina-full
+access: default
+
+vars:
+  region: ap-southeast-1
+  # Set to your pushed image, e.g. docker.io/<dockerhub-user>/patina-api:latest
+  image: ${env(PATINA_IMAGE)}
+
+resources:
+  patina-api:
+    component: fc3
+    props:
+      region: ${vars.region}
+      functionName: patina-full
+      description: Patina full backend — Qwen + ApsaraDB RDS pgvector on Alibaba Cloud
+      runtime: custom-container
+      timeout: 120
+      memorySize: 1024
+      cpu: 0.5
+      diskSize: 512
+      customContainerConfig:
+        image: ${vars.image}
+        port: 9000
+      environmentVariables:
+        DASHSCOPE_API_KEY: ${env(DASHSCOPE_API_KEY)}
+        DASHSCOPE_BASE_URL: https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+        QWEN_BACKBONE_MODEL: qwen3.7-plus
+        # RDS via public endpoint (raw password ok — db.py parses robustly).
+        DATABASE_URL: ${env(RDS_DATABASE_URL)}
+      triggers:
+        - triggerName: http
+          triggerType: http
+          triggerConfig:
+            authType: anonymous
+            methods: [GET, POST]

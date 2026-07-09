@@ -1,0 +1,24 @@
+# Local Postgres + pgvector — mirrors ApsaraDB RDS PostgreSQL so there are no
+# surprises at deploy time (techstack-patina.md §1).
+#   docker compose up -d
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: patina-db
+    environment:
+      POSTGRES_USER: patina
+      POSTGRES_PASSWORD: patina
+      POSTGRES_DB: patina
+    ports:
+      # Host 5433 -> container 5432 (avoids clashing with a host Postgres on 5432).
+      - "5433:5432"
+    volumes:
+      - patina_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U patina"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  patina_pgdata:

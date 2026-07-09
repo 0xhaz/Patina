@@ -1,0 +1,17 @@
+# Secrets — NEVER commit (repo is public for judging)
+.env
+.env.local
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# uv
+# (pyproject.toml + uv.lock ARE committed for reproducible FC builds)
+
+# OS
+.DS_Store

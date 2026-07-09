@@ -1,0 +1,300 @@
+{
+  "generated": "20 Jun 2026",
+  "today": "20 Jun 2026",
+  "scenarios": [
+    {
+      "scenario": "A_multilingual_cluster",
+      "memory_mechanism": "format",
+      "repeated_pattern": {
+        "clusters": "zh(01,02) + ja(03,04)",
+        "note": "ID code in header block; non-Roman script"
+      },
+      "vendors": [
+        {
+          "seq": 1,
+          "language": "zh",
+          "entity_name": "上海精密机械有限公司",
+          "documents": [
+            "business_registration.png",
+            "bank_letter.pdf",
+            "insurance_certificate.pdf"
+          ],
+          "ground_truth": {
+            "tax_id": "91310000MA1FL2XY3A",
+            "account_no": "6225 8801 2889 455",
+            "account_holder": "上海精密机械有限公司",
+            "policy_no": "ZH-CGL-77120",
+            "coverage": "CNY 5,000,000",
+            "policy_expiry": "01 Jan 2027",
+            "rep_native_script": "陈伟"
+          },
+          "expected_flags": [
+            "low_confidence_extraction: novel Chinese registration layout (non-Roman, ID in header)"
+          ],
+          "memory_should_learn": [
+            "format: Chinese 营业执照 layout -> ID code in header block"
+          ]
+        },
+        {
+          "seq": 2,
+          "language": "zh",
+          "entity_name": "深圳电子科技有限公司",
+          "documents": [
+            "business_registration.png",
+            "bank_letter.pdf",
+            "insurance_certificate.pdf"
+          ],
+          "ground_truth": {
+            "tax_id": "91440300MA5DK8PQ7B",
+            "account_no": "6225 8801 8774 521",
+            "account_holder": "深圳电子科技有限公司",
+            "policy_no": "ZH-CGL-77310",
+            "coverage": "CNY 6,000,000",
+            "policy_expiry": "01 Feb 2027",
+            "rep_native_script": "林芳"
+          },
+          "expected_flags": [],
+          "memory_should_learn": [
+            "format-hit: recognised Chinese layout, high-confidence extraction, no flag"
+          ]
+        },
+        {
+          "seq": 3,
+          "language": "ja",
+          "entity_name": "東京精密工業株式会社",
+          "documents": [
+            "business_registration.png",
+            "bank_letter.pdf",
+            "insurance_certificate.pdf"
+          ],
+          "ground_truth": {
+            "tax_id": "0104-01-088945",
+            "account_no": "0012-345-6789012",
+            "account_holder": "東京精密工業株式会社",
+            "policy_no": "JP-CGL-77455",
+            "coverage": "JPY 200,000,000",
+            "policy_expiry": "15 Jan 2027",
+            "rep_native_script": "田中 健一"
+          },
+          "expected_flags": [
+            "low_confidence_extraction: novel Japanese registration layout (non-Roman, ID in header)"
+          ],
+          "memory_should_learn": [
+            "format: Japanese 履歴事項証明書 layout -> ID code in header block"
+          ]
+        },
+        {
+          "seq": 4,
+          "language": "ja",
+          "entity_name": "大阪海運サービス株式会社",
+          "documents": [
+            "business_registration.png",
+            "bank_letter.pdf",
+            "insurance_certificate.pdf"
+          ],
+          "ground_truth": {
+            "tax_id": "0120-01-115566",
+            "account_no": "0033-221-9988776",
+            "account_holder": "大阪海運サービス株式会社",
+            "policy_no": "JP-CGL-77600",
+            "coverage": "JPY 300,000,000",
+            "policy_expiry": "01 Mar 2027",
+            "rep_native_script": "佐藤 美咲"
+          },
+          "expected_flags": [],
+          "memory_should_learn": [
+            "format-hit: recognised Japanese layout, high-confidence extraction, no flag"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "B_trading_name_trap",
+      "memory_mechanism": "exception",
+      "repeated_pattern": {
+        "layout": "standard",
+        "trading_name": true
+      },
+      "vendors": [
+        {
+          "seq": 1,
+          "entity_name": "Brightpath Industrial Sdn Bhd",
+          "documents": [
+            "business_registration.pdf",
+            "bank_letter.pdf",
+            "insurance_certificate.pdf"
+          ],
+          "ground_truth": {
+            "tax_id": "C20881009987",
+            "account_no": "3-88102-22119",
+            "account_holder": "BrightPath Supplies",
+            "policy_no": "AZ-CGL-50121",
+            "coverage": "USD 2,000,000",
+            "policy_expiry": "01 Feb 2027"
+          },
+          "expected_flags": [
+            "bank_holder_mismatch: account holder != entity name"
+          ],
+          "memory_should_learn": [
+            "exception: trading-name mismatch is acceptable for this entity type"
+          ]
+        },
+        {
+          "seq": 2,
+          "entity_name": "Summit Tools & Hardware Sdn Bhd",
+          "documents": [
+            "business_registration.pdf",
+            "bank_letter.pdf",
+            "insurance_certificate.pdf"
+          ],
+          "ground_truth": {
+            "tax_id": "C20990011223",
+            "account_no": "3-88102-44551",
+            "account_holder": "Summit Tools & Hardware Sdn Bhd",
+            "policy_no": "AZ-CGL-50330",
+            "coverage": "USD 2,000,000",
+            "policy_expiry": "01 Feb 2027"
+          },
+          "expected_flags": [],
+          "memory_should_learn": []
+        },
+        {
+          "seq": 3,
+          "entity_name": "Cascade Engineering Sdn Bhd",
+          "documents": [
+            "business_registration.pdf",
+            "bank_letter.pdf",
+            "insurance_certificate.pdf"
+          ],
+          "ground_truth": {
+            "tax_id": "C20010022118",
+            "account_no": "3-88102-66770",
+            "account_holder": "Cascade Pro",
+            "policy_no": "AZ-CGL-50489",
+            "coverage": "USD 2,000,000",
+            "policy_expiry": "01 Feb 2027"
+          },
+          "expected_flags": [],
+          "memory_should_learn": [
+            "exception-hit: known trading-name pattern, low-confidence note not hard flag"
+          ]
+        },
+        {
+          "seq": 4,
+          "entity_name": "Ironwood Fasteners Sdn Bhd",
+          "documents": [
+            "business_registration.pdf",
+            "bank_letter.pdf",
+            "insurance_certificate.pdf"
+          ],
+          "ground_truth": {
+            "tax_id": "C20730008844",
+            "account_no": "3-88102-99002",
+            "account_holder": "Ironwood Trading",
+            "policy_no": "AZ-CGL-50601",
+            "coverage": "USD 2,000,000",
+            "policy_expiry": "01 Feb 2027"
+          },
+          "expected_flags": [],
+          "memory_should_learn": [
+            "exception-hit: known trading-name pattern, low-confidence note not hard flag"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "C_expiring_insurance",
+      "memory_mechanism": "decay_invalidation",
+      "repeated_pattern": {
+        "layout": "standard",
+        "trading_name": false
+      },
+      "vendors": [
+        {
+          "seq": 1,
+          "entity_name": "Keppel Logistics Pte Ltd",
+          "documents": [
+            "business_registration.pdf",
+            "bank_letter.pdf",
+            "insurance_certificate.pdf"
+          ],
+          "ground_truth": {
+            "tax_id": "201812345A",
+            "account_no": "072-901-22119",
+            "account_holder": "Keppel Logistics Pte Ltd",
+            "policy_no": "MG-CGL-90011",
+            "coverage": "SGD 1,500,000",
+            "policy_expiry": "01 Sep 2026"
+          },
+          "expected_flags": [],
+          "memory_should_learn": []
+        },
+        {
+          "seq": 2,
+          "entity_name": "Jurong Marine Services Pte Ltd",
+          "documents": [
+            "business_registration.pdf",
+            "bank_letter.pdf",
+            "insurance_certificate.pdf"
+          ],
+          "ground_truth": {
+            "tax_id": "201922456B",
+            "account_no": "072-901-44551",
+            "account_holder": "Jurong Marine Services Pte Ltd",
+            "policy_no": "MG-CGL-90120",
+            "coverage": "SGD 1,500,000",
+            "policy_expiry": "25 Jun 2026"
+          },
+          "expected_flags": [
+            "insurance_expiring_soon: policy expires 25 Jun 2026 (within 14 days)"
+          ],
+          "memory_should_learn": [
+            "decay: remembered-valid policy now near expiry -> surface for renewal"
+          ]
+        },
+        {
+          "seq": 3,
+          "entity_name": "Sentosa Facilities Pte Ltd",
+          "documents": [
+            "business_registration.pdf",
+            "bank_letter.pdf",
+            "insurance_certificate.pdf"
+          ],
+          "ground_truth": {
+            "tax_id": "202033567C",
+            "account_no": "072-901-66770",
+            "account_holder": "Sentosa Facilities Pte Ltd",
+            "policy_no": "MG-CGL-90233",
+            "coverage": "SGD 1,500,000",
+            "policy_expiry": "01 Feb 2026"
+          },
+          "expected_flags": [
+            "insurance_expired: policy expired 01 Feb 2026 (before today)"
+          ],
+          "memory_should_learn": [
+            "invalidation: expired policy must be re-flagged despite prior acceptance"
+          ]
+        },
+        {
+          "seq": 4,
+          "entity_name": "Changi Equipment Pte Ltd",
+          "documents": [
+            "business_registration.pdf",
+            "bank_letter.pdf",
+            "insurance_certificate.pdf"
+          ],
+          "ground_truth": {
+            "tax_id": "201744678D",
+            "account_no": "072-901-99002",
+            "account_holder": "Changi Equipment Pte Ltd",
+            "policy_no": "MG-CGL-90345",
+            "coverage": "SGD 1,500,000",
+            "policy_expiry": "01 Mar 2027"
+          },
+          "expected_flags": [],
+          "memory_should_learn": []
+        }
+      ]
+    }
+  ]
+}
