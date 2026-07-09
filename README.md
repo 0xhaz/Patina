@@ -1,94 +1,123 @@
-# Demo Dataset — Memory-Enabled Vendor Onboarding Agent
+# Patina
 
-Synthetic vendor onboarding packets for demo testing. Three scenarios, each
-engineered around **one repeated pattern** so the agent visibly improves across
-vendors — the "it learned in front of you" demo beat. Each scenario targets a
-**different memory mechanism**.
+**Onboarding that gets sharper every time.**
 
-All data is synthetic. Entity names, IDs, and documents are invented.
+Patina is a vendor‑onboarding agent that develops a *patina*: it gets richer and more
+accurate the more document packets pass through it. It reads a new supplier's messy
+packet (business registration, bank letter, insurance certificate), validates it against
+policy, and routes **only genuine, novel exceptions** to a human — then **remembers how
+each was resolved**, so the next similar vendor sails through untouched.
+
+Built for the Global AI Hackathon with Qwen Cloud — **Track 1 (MemoryAgent)**.
 
 ---
 
-## What's here
+## The problem
+
+Vendor onboarding is universal back‑office pain: a clerk manually validates each
+document, cross‑checks consistency (bank holder vs registered entity, expiry dates,
+coverage), applies policy, and kicks back genuine issues. It's slow, repetitive, and
+error‑prone — and a static tool never gets better at it.
+
+## What makes Patina different
+
+A **custom‑engineered memory layer** — not an off‑the‑shelf memory API and not a
+vector‑store wrapper. It is the product, the innovation, and the reason onboarding
+*compounds*:
+
+- **Multi‑scoped memory** — format, exception, entity, and episodic scopes, each with
+  its own retrieval pattern and decay rate.
+- **Hierarchical distillation** — resolved cases are compressed into compact structured
+  facts (e.g. *"bank trading‑name mismatch for this entity type → accept"*), not transcripts.
+- **Purposeful decay + hard‑invalidation** — relevance fades with time but **resets on
+  usefulness** (spaced repetition); expired certs/superseded policies are *retired*, not faded.
+- **Multi‑signal hybrid retrieval** — semantic similarity **+** structured match **+** decay
+  weight, combined in **one SQL query** over Postgres + pgvector.
+
+## The demo: compounding intelligence
+
+Three scenarios, each showcasing a different memory mechanism. Watch human‑touches fall
+to zero as the agent recognizes repeated patterns:
+
+| Scenario | Memory mechanism | Human‑touches per vendor | The beat |
+|---|---|---|---|
+| **A** — multilingual (Chinese + Japanese) | **Format** | `1, 0, 1, 0` | Learns Chinese 营业执照, then Japanese 履歴事項証明書 — *separately* |
+| **B** — trading‑name trap | **Exception** | `1, 0, 0, 0` | Stops crying wolf: repeat holder‑name mismatches become a note, not a flag |
+| **C** — expiring insurance | **Decay / invalidation** | `0, 1, 1, 0` | Knows when its own memory has gone stale |
+
+## Architecture
+
+Full detail + diagrams (system topology, agent pipeline, memory engine) in
+**[docs/architecture.md](docs/architecture.md)**. The whole stack is live:
 
 ```
-demo_data/
-├── manifest.json                  <- GROUND TRUTH (extraction answers + expected flags + what memory should learn)
-├── A_multilingual_cluster/        <- FORMAT memory (CJK: Chinese + Japanese)
-├── B_trading_name_trap/           <- EXCEPTION memory
-├── C_expiring_insurance/          <- DECAY / HARD INVALIDATION
-└── _archived/A_vietnamese_cluster <- original Vietnamese scenario (superseded, kept for reference)
-    └── vendor_0N/
-        ├── business_registration.png (.pdf for Roman-script docs)
-        ├── bank_letter.pdf / .png
-        ├── insurance_certificate.pdf / .png
-        └── business_registration_PHOTO.jpg   (vendor_01 only — messy phone-photo intake)
+Vercel (Next.js)  →  Alibaba Function Compute (FastAPI)  →  ApsaraDB RDS + pgvector
+                                    ↓
+                        Qwen Cloud (Model Studio / DashScope)
 ```
 
-- **PDF** = clean digital document (the easy case).
-- **PNG** = 150 dpi page render of each PDF (feed these to the vision model — your real pipeline takes images).
-- **_PHOTO.jpg** = vendor_01 registration only, with rotation / vignette / warm cast / soft blur to simulate a phone photo. This is the "hard first contact" that makes vendor #1 genuinely difficult *before* memory kicks in.
+The pipeline is a staged, explicit‑state flow — not a mega‑prompt:
 
-`today` is pinned to **20 Jun 2026** in the manifest — scenario C's expiry logic is relative to that date.
+`Intake → Extraction → Validation → Memory‑Consult → Exception‑Route → Human‑Gate → Learn`
 
----
+Extraction uses `qwen3.7-plus` (multimodal, per‑field confidence) with a `qwen-vl-ocr`
+fallback; validation is deterministic Python; novel exceptions are adjudicated by Qwen
+**native function‑calling** over custom tools + **two MCP servers** (registry / denied‑party
+lookup and memory search).
 
-## The three scenarios and their demo beats
+## Tech stack
 
-### A — Multilingual cluster  ·  FORMAT memory  ·  CJK (Chinese + Japanese)
-Four vendors in **two script clusters**, so each writing system repeats
-(the learning beat needs a repeat within the scenario):
-- **Vendors 1–2: Chinese** business licenses (营业执照). Unified Social Credit Code
-  (统一社会信用代码) sits in a **header band** — the novel position the agent must learn.
-- **Vendors 3–4: Japanese** registration certificates (履歴事項全部証明書). Corporate
-  number (会社法人等番号) in a header block; Reiwa-era dates (令和8年) add real format quirk.
+| Layer | Choice |
+|---|---|
+| Backend | Python 3.12, FastAPI, custom staged pipeline (no agent framework) |
+| Models | Qwen via Model Studio (DashScope, Singapore) — `qwen3.7-plus`, `qwen-vl-ocr`, `qwen-flash`, `text-embedding-v4` |
+| Memory store | ApsaraDB RDS PostgreSQL 16 + pgvector (single store: relational + vectors) |
+| Tools / MCP | Custom function tools + 2 MCP servers (`patina-registry`, `patina-memory`) |
+| Compute | Alibaba Cloud Function Compute (custom container) |
+| Frontend | Next.js + Tailwind, on Vercel |
 
-Flow:
-- **Vendor 1 (Chinese):** novel non-Roman layout → low-confidence extraction → flagged. Human confirms. *Memory learns the Chinese 营业执照 format.*
-- **Vendor 2 (Chinese):** format recognised → confident extraction → no flag.
-- **Vendor 3 (Japanese):** new script → flagged again. *Memory learns the Japanese format.*
-- **Vendor 4 (Japanese):** recognised → no flag.
-- **Beat:** "It learned to read Chinese business licenses, then learned Japanese ones — separately." Showcases Qwen's CJK strength (its single biggest edge) AND format-memory generalisation across writing systems.
+## Repository layout
 
-**Why this replaced the Vietnamese scenario:** it plays to Qwen's best-in-class CJK
-handling — a feature + tech-choice that reinforce each other — and upgrades the beat
-from "diacritics" to "different writing systems." Note for the demo: keep the extracted
-**English-normalised fields** prominent on screen so judges who don't read CJK can still
-see the before/after improvement. The bank + insurance docs stay in English (realistic for
-cross-border onboarding) so the packet isn't wall-to-wall characters.
+```
+backend/        FastAPI app + the agent (patina/ package) + tests
+  patina/memory/       memory engine (schema, decay, retrieval, distillation)
+  patina/pipeline/     staged orchestrator + Human-Gate + Memory-Consult
+  patina/extraction/   Qwen-VL extraction with per-field confidence
+  patina/validation/   deterministic policy + consistency rules
+  patina/tools/        function tools + Qwen function-calling adjudication
+  patina/mcp/          two MCP servers
+web/            Next.js dashboard (vendor list, pipeline, review, memory explorer)
+demo_data/      generated demo packets (3 scenarios × 4 vendors) + generator
+manifest.json   ground-truth contract for the demo set
+docs/           architecture + diagrams
+```
 
-### B — Trading-name trap  ·  EXCEPTION memory
-Bank account holder name **differs from the registered entity name** because the
-vendor banks under a trading/DBA name. A naive validator flags this as fraud every time.
-- **Vendor 1 (Brightpath Industrial → "BrightPath Supplies"):** flagged. Human approves as legitimate trading name. *Memory learns the exception.*
-- **Vendor 2 (Summit):** clean control — holder matches, no flag (proves it's not blindly suppressing).
-- **Vendors 3–4 (Cascade, Ironwood):** same mismatch pattern → recognised → surfaced as a low-confidence note, not a hard fraud flag.
-- **Beat:** "It stopped crying wolf." Best business-credible metric (false-flag reduction).
+## Run it locally
 
-### C — Expiring insurance  ·  DECAY / HARD INVALIDATION
-Insurance certs with explicit expiry dates, relative to today (20 Jun 2026).
-- **Vendor 1 (Keppel):** expires 01 Sep 2026 — valid, baseline accept.
-- **Vendor 2 (Jurong):** expires **25 Jun 2026** — valid now but **expires within the demo window** → should surface for renewal (decay).
-- **Vendor 3 (Sentosa):** expired **01 Feb 2026** — looks complete but is **already expired** → must be re-flagged (hard invalidation).
-- **Vendor 4 (Changi):** expires 01 Mar 2027 — valid renewal, accept.
-- **Beat:** "It knows when its own memory has gone stale." Most technically impressive — proves the invalidation layer most teams never build.
+```bash
+# 1) Backend
+cd backend
+cp .env.example .env          # add your DASHSCOPE_API_KEY (Model Studio, Singapore)
+uv sync
+docker compose up -d           # local Postgres + pgvector
+uv run python scripts/init_db.py
+uv run python scripts/run_demo.py    # seed the 3 scenarios, watch the counters fall
+uv run uvicorn app:app --port 9000   # API at :9000 (/docs for the OpenAPI UI)
+uv run pytest                        # unit tests (memory, validation, tools)
 
----
+# 2) Frontend
+cd ../web
+pnpm install
+NEXT_PUBLIC_API_BASE=http://localhost:9000 pnpm dev   # dashboard at :3000
+```
 
-## How to use it for testing
+## Deployment
 
-1. **Extraction accuracy:** run each vendor's PNGs through the vision model, compare to `manifest.json → ground_truth` (tax_id, account_no, account_holder, policy_no, coverage, policy_expiry).
-2. **Flag correctness:** compare your agent's flags to `expected_flags`. These are the genuine, novel issues a human should see.
-3. **Memory behaviour:** `memory_should_learn` lists, per vendor, what the memory engine should store (vendor 1) or recall (vendors 2–4). This is how you verify the *compounding* behaviour — the core of the demo.
-4. **Vision stress test:** start vendor_01 with the `_PHOTO.jpg` to make first contact realistically hard, then use clean PNGs for 2–4 so the improvement reads cleanly on camera.
-5. **Pick the demo:** run all three, see which gives the cleanest "it learned" moment in rehearsal, lead with that one. A is safest, B is most business-credible, C is most technically impressive.
+- **Backend** on Alibaba Cloud Function Compute (custom container) + **ApsaraDB RDS
+  PostgreSQL/pgvector**, region Singapore. A minimal `/proof` endpoint round‑trips Qwen
+  to demonstrate live model access from the deployed function.
+- **Frontend** on Vercel, with `NEXT_PUBLIC_API_BASE` pointed at the Function Compute URL.
 
----
+## License
 
-## Regenerating / extending
-
-`generate.py` (in the working dir, not shipped here) builds everything deterministically
-(seeded). To add vendors or scenarios, extend the `scenario_*()` functions and the
-`expected_flags()` logic, then re-run. Fonts use DejaVu Sans for full Vietnamese coverage.
-
-Note the manifest is the contract: if you change a document, update its ground-truth entry.
+[MIT](LICENSE). All demo data is synthetic — entity names, IDs, and documents are invented.
