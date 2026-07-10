@@ -3,16 +3,28 @@ the scenarios (slow — vision calls) and is meant for demo setup, not per-reque
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+import os
+import tempfile
+import uuid
+
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from psycopg.rows import dict_row
 from pydantic import BaseModel
 
 from patina import db
 from patina.api import mappers
 from patina.pipeline import store as pstore
-from patina.pipeline.orchestrator import resolve
+from patina.pipeline.orchestrator import resolve, run
+from patina.pipeline.state import Submission
 
 router = APIRouter(prefix="/api")
+
+# Country → (language for the format-novelty check, display doc_format).
+_COUNTRY_LANG = {"CN": "zh", "JP": "ja"}
+_DOC_FORMAT = {
+    "CN": "CN — 营业执照", "JP": "JP — 履歴事項全部証明書",
+    "MY": "MY — SSM registration", "SG": "SG — ACRA bizfile",
+}
 
 
 def _has_hard_flag(state_json: dict) -> bool:
@@ -60,6 +72,42 @@ def resolve_vendor(vendor_id: str, body: ResolveBody) -> dict:
         except ValueError as e:
             raise HTTPException(404, str(e)) from e
         st = pstore.load(conn, vendor_id)
+    return mappers.state_to_detail(st)
+
+
+@router.post("/onboard")
+async def onboard(
+    registration: UploadFile = File(...),
+    bank: UploadFile = File(...),
+    insurance: UploadFile = File(...),
+    country: str = Form(...),
+    name: str | None = Form(None),
+) -> dict:
+    """Upload a vendor's three documents → run the pipeline → return the result.
+
+    Powers the intake page's live upload flow: the packet runs through
+    extraction/validation/memory-consult and either auto-approves or surfaces an
+    exception for the human to resolve (which then teaches memory)."""
+    tmp = tempfile.mkdtemp(prefix="patina_up_")
+    paths: dict[str, str] = {}
+    for key, up in (("registration", registration), ("bank", bank), ("insurance", insurance)):
+        ext = os.path.splitext(up.filename or "")[1] or ".png"
+        dest = os.path.join(tmp, f"{key}{ext}")
+        with open(dest, "wb") as fh:
+            fh.write(await up.read())
+        paths[key] = dest
+
+    cc = country.upper()
+    sub = Submission(
+        vendor_id=f"UP-{uuid.uuid4().hex[:5]}",
+        doc_paths=paths,
+        country=cc,
+        language=_COUNTRY_LANG.get(cc),
+        doc_format=_DOC_FORMAT.get(cc, f"{cc} — registration"),
+        latin_name=name or None,
+    )
+    with db.connect() as conn:
+        st = run(conn, sub)
     return mappers.state_to_detail(st)
 
 

@@ -24,5 +24,8 @@ docs/submission.md
 .claude/
 mnt/
 
+# --- Submission build artifacts (docx/png exports) ---
+submission/
+
 # --- OS ---
 .DS_Store
