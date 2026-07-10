@@ -51,8 +51,23 @@ def _clamp(c) -> float:
         return 0.0
 
 
+def _as_image(path: str | Path) -> str:
+    """Qwen-VL needs an image. If given a PDF, render its first page to a PNG
+    (uploads may arrive as PDF or PNG)."""
+    p = str(path)
+    if p.lower().endswith(".pdf"):
+        import pypdfium2 as pdfium
+
+        pdf = pdfium.PdfDocument(p)
+        img = pdf[0].render(scale=2.0).to_pil()
+        out = f"{p.rsplit('.', 1)[0]}_page1.png"
+        img.save(out)
+        return out
+    return p
+
+
 def _extract_once(doc_type: DocType, image_path: str | Path, model: str) -> ExtractedDoc:
-    raw = llm.vision_json(_prompt(doc_type), image_path, model=model)
+    raw = llm.vision_json(_prompt(doc_type), _as_image(image_path), model=model)
     return _parse(doc_type, raw, model)
 
 
