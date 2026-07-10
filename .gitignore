@@ -27,5 +27,8 @@ mnt/
 # --- Submission build artifacts (docx/png exports) ---
 submission/
 
+# --- Extra practice/test packets (curated demo set is demo_data/A|B|C) ---
+demo_data/_test/
+
 # --- OS ---
 .DS_Store
