@@ -41,11 +41,13 @@ Registration / Bank / Insurance). Set **Country = China**. Click **Run onboardin
 > "First vendor — a Chinese supplier. Watch Qwen‑VL read every field, in Chinese, and score its
 > own confidence."
 
-On screen: the "Onboarding…" spinner, then the extracted fields fill in and it comes back
-**Flagged**. The **Review queue badge in the sidebar ticks to 1.**
+On screen: the "Onboarding…" spinner, then the extracted fields fill in (all **High**
+confidence) and it comes back **Flagged**. The **Review queue badge in the sidebar ticks to 1.**
 
-> "It extracted the values, but it's never seen this 营业执照 layout — the credit code sits in
-> the header band — so it flagged it and routed it to a human. Let's watch that run."
+**Explain the screen (the one line that clears up the apparent contradiction):**
+> "It read every field cleanly — all high‑confidence — but it's never seen this Chinese
+> registration *layout* before, so it flags the *document* as novel and asks a human to confirm
+> it once. High confidence on the values; cautious because the format is new. Let's watch that run."
 
 ### 0:50–1:30 — Watch it move through the pipeline (Pipeline)
 Go to **Pipeline**. The flagged vendor is already selected in the picker.
