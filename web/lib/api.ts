@@ -55,6 +55,38 @@ export async function getMemory(): Promise<MemoryItem[]> {
   return get<MemoryItem[]>('/api/memory', [])
 }
 
+export type VendorDetail = {
+  vendor: Vendor
+  fields: { label: string; value: string; confidence: 'high' | 'medium' | 'low'; source: 'registration' | 'bank' | 'insurance' }[]
+  exceptions: {
+    id: string
+    code?: string
+    field: string
+    severity: 'flagged' | 'needs-review'
+    reasoning: string
+    memory?: { summary: string; detail: string; seenCount: number }
+  }[]
+  notes: string[]
+  stage: string
+  formatRecognized: boolean | null
+}
+
+export async function getVendorDetail(id: string): Promise<VendorDetail | null> {
+  return get<VendorDetail | null>(`/api/vendors/${id}`, null)
+}
+
+export async function resolveVendor(id: string, rejections: string[] = []): Promise<void> {
+  try {
+    await fetch(`${BASE}/api/vendors/${id}/resolve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rejections }),
+    })
+  } catch {
+    /* demo resilience */
+  }
+}
+
 export function apiBase() {
   return BASE
 }
