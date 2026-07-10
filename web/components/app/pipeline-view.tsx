@@ -30,7 +30,14 @@ export function PipelineView() {
     const list = await getVendors()
     setVendors(list)
     setSelectedId((cur) => {
-      if (cur && list.some((v) => v.id === cur)) return cur
+      if (cur && list.some((v) => v.id === cur)) return cur // keep current selection
+      // On first load, honor the vendor passed from Intake (?vendor=...), else the
+      // most recent flagged one, else the latest.
+      const preferred =
+        typeof window !== 'undefined'
+          ? new URLSearchParams(window.location.search).get('vendor')
+          : null
+      if (preferred && list.some((v) => v.id === preferred)) return preferred
       const flagged = list.find((v) => v.status === 'flagged' || v.status === 'needs-review')
       return (flagged ?? list[0])?.id ?? ''
     })
