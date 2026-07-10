@@ -45,7 +45,9 @@ On screen: the intake is a simple upload form — on run it shows "Onboarding…
 the Pipeline page** for this vendor. (The Review queue badge in the sidebar ticks to 1.)
 
 ### 0:50–1:30 — Watch it move through the pipeline (Pipeline)
-You land on **Pipeline** with the vendor already selected.
+You land on **Pipeline** with the vendor already selected. *(This is also the one vendor that
+reached a human — the **Review queue** badge in the sidebar shows 1; the queue is the human's
+inbox, and every item there links straight to its run here.)*
 
 > "Here's that single vendor moving through the stages — Intake, Extraction, Validation, Memory
 > check, Exception routing — paused at **Human review**."
@@ -124,7 +126,7 @@ Optional: flash the architecture diagram (`docs/architecture.md`).
 | **Dashboard** | Counters + recent activity — the "before" (all zero) and the growth |
 | **Vendor intake** | Drop the three documents + country → run → hands off to the Pipeline page |
 | **Pipeline** | The vendor's run: **stage stepper**, extracted fields + confidence, exceptions, Approve/Override |
-| **Review queue** | Only genuine novel exceptions; the sidebar badge ticks live |
+| **Review queue** | The human's **triage inbox** — only pending exceptions; each row links into its Pipeline run (badge ticks live). Approve/Override happens on the Pipeline |
 | **Memory explorer** | The learned store; a card is **created** (60%) then **reinforced** (80%, recalled 1) |
 
 ## Practice packets (test before recording)
