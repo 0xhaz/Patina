@@ -34,37 +34,38 @@ at once — the intake page auto‑sorts them by filename. PNG or PDF both work.
 
 On screen: the empty dashboard — all counters at 0. Tagline: *"Onboarding that gets sharper every time."*
 
-### 0:20–0:50 — Ingest vendor 1 (Vendor intake)
+### 0:20–0:50 — Drop vendor 1's documents (Vendor intake)
 Go to **Vendor intake**. Drag vendor_01's three files into the dropzone (they auto‑sort into
 Registration / Bank / Insurance). Set **Country = China**. Click **Run onboarding**.
 
-> "First vendor — a Chinese supplier. Watch Qwen‑VL read every field, in Chinese, and score its
-> own confidence."
+> "First vendor — a Chinese supplier. I just drop the packet and hit run. Qwen‑VL reads it, the
+> agent validates and checks its memory, and it opens the run in the pipeline."
 
-On screen: the "Onboarding…" spinner, then the extracted fields fill in (all **High**
-confidence) and it comes back **Flagged**. The **Review queue badge in the sidebar ticks to 1.**
-
-**Explain the screen (the one line that clears up the apparent contradiction):**
-> "It read every field cleanly — all high‑confidence — but it's never seen this Chinese
-> registration *layout* before, so it flags the *document* as novel and asks a human to confirm
-> it once. High confidence on the values; cautious because the format is new. Let's watch that run."
+On screen: the intake is a simple upload form — on run it shows "Onboarding…", then **auto‑opens
+the Pipeline page** for this vendor. (The Review queue badge in the sidebar ticks to 1.)
 
 ### 0:50–1:30 — Watch it move through the pipeline (Pipeline)
-Go to **Pipeline**. The flagged vendor is already selected in the picker.
+You land on **Pipeline** with the vendor already selected.
 
 > "Here's that single vendor moving through the stages — Intake, Extraction, Validation, Memory
-> check, Exception routing — and it's paused at **Human review**."
+> check, Exception routing — paused at **Human review**."
 
 On screen: the **stepper** (green through Exception routing, spinner on Human review), the
-**Extracted fields** table (entity name, credit code, holder — all high‑confidence CJK), and the
-**exception**: *"Novel Chinese registration layout … low confidence."*
+**Extracted fields** table (entity name, credit code, holder — all **High** confidence CJK), and
+the **exception**: *"Novel Chinese registration layout … low confidence."*
+
+**Explain the screen (clears up the apparent contradiction):**
+> "It read every field cleanly — all high‑confidence — but it's never seen this Chinese
+> registration *layout* before, so it flags the *document* as novel and asks a human to confirm
+> once. High confidence on the values; cautious because the format is new."
 
 Click **Approve & teach memory**.
 
-> "A human confirms it — and the stepper completes to Decision. But here's the point: the agent
-> just recorded *how* this was resolved."
+> "A human confirms it — the stepper completes to Decision. And the point: the agent just recorded
+> *how* this was resolved."
 
-On screen: stepper goes fully green; status flips to auto‑approved.
+On screen: stepper goes fully green; status flips to auto‑approved; the exception panel becomes
+*"Resolved — written to memory."*
 
 ### 1:30–1:45 — The memory is born (Memory explorer)
 Go to **Memory explorer**.
@@ -74,13 +75,15 @@ Go to **Memory explorer**.
 
 On screen: one **Format memory** card — **60% · Stable · Times recalled 0.**
 
-### 1:45–2:10 — Vendor 2 sails through (Intake → Pipeline)
+### 1:45–2:10 — Vendor 2 sails through
 Back to **Vendor intake**. Drag vendor_02's three files, **Country = China**, **Run onboarding**.
 
-> "Second Chinese vendor, same format. No flag — **auto‑approved, zero human touches.**"
+> "Second Chinese vendor, same format."
 
-On screen: green **Auto‑approved**, "Format recognized from memory." (Optionally open **Pipeline**,
-select vendor 2 → the stepper is **all green**, no exceptions.)
+On screen: it lands on **Pipeline** with the stepper **all green** and **no exceptions** —
+*"Format recognized from memory."*
+
+> "No flag — **auto‑approved, zero human touches** — because it remembered."
 
 ### 2:10–2:25 — The payoff: memory reinforced (Memory explorer)
 Re‑open **Memory explorer**.
@@ -119,8 +122,8 @@ Optional: flash the architecture diagram (`docs/architecture.md`).
 | Page | What it shows live |
 |---|---|
 | **Dashboard** | Counters + recent activity — the "before" (all zero) and the growth |
-| **Vendor intake** | Drop documents → pipeline runs → fields + confidence + flag/auto‑approve |
-| **Pipeline** | A selected vendor's run: **stage stepper**, extracted fields, exceptions, Approve/Override |
+| **Vendor intake** | Drop the three documents + country → run → hands off to the Pipeline page |
+| **Pipeline** | The vendor's run: **stage stepper**, extracted fields + confidence, exceptions, Approve/Override |
 | **Review queue** | Only genuine novel exceptions; the sidebar badge ticks live |
 | **Memory explorer** | The learned store; a card is **created** (60%) then **reinforced** (80%, recalled 1) |
 
