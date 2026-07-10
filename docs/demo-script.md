@@ -44,7 +44,21 @@ CJK), and a **Flagged** exception appears: *"Novel Chinese registration layout �
 Click **Approve & teach memory**.
 > "A human confirms it — and here's the point: the agent records how this was resolved."
 
-(Optionally flip to **Memory explorer** → a new **Format** memory item has appeared.)
+Flip to **Memory explorer** → a new **Format memory** card has appeared:
+*"Recognized zh 营业执照 layout; ID code in header band."*
+
+**What the card means (and what to say):**
+- **Relevance 60%** — new memories start at 0.60 effective strength.
+- **State: Stable** — above the forget-floor, below the "Reinforced" threshold (0.70).
+- **Times recalled: 0** — it was just *created*; it hasn't been *reused* yet.
+- **First learned / Last used: just now.**
+
+> "Right now this memory is brand new — learned once, never reused. Watch what the next
+> vendor does to it."
+
+**The mechanism (for reference):** upload vendor 1 → Extraction (Qwen-VL) → Validation
+(passes) → Memory-Consult finds *no* Chinese format → flags novel → Human approves → the
+**Learn** stage distills and writes the Format memory item above.
 
 ### 1:10–1:45 — Upload vendor 2, one pass, zero touches (the reveal)
 Back to **Intake**. Drag vendor_02's three files. **Country = China**. **Run onboarding**.
@@ -53,6 +67,15 @@ Back to **Intake**. Drag vendor_02's three files. **Country = China**. **Run onb
 > zero human touches** — because it remembered."
 
 On screen: green **Auto-approved**, "Format recognized from memory."
+
+**Now the payoff — flip back to Memory explorer** (re-open the page to refresh). The *same*
+Format card is visibly stronger:
+- **Relevance 60% → ~80%** (fuller green bar), **State: Stable → Reinforced**
+- **Times recalled: 0 → 1**, **Last used: just now**
+
+> "And look — recognizing that vendor didn't just save a human touch, it *strengthened the
+> memory*. Relevance up, recall count up. The more it's used, the more it trusts it. That's
+> the patina."
 
 ### 1:45–2:15 — It learned Japanese *separately*
 Upload vendor_03 (**Country = Japan**) → it **flags again** (new writing system) → Approve.
