@@ -53,6 +53,12 @@ export default async function DashboardPage() {
           </div>
 
           <div className="mt-4 overflow-hidden rounded-xl border border-border bg-card">
+            {vendors.length === 0 && (
+              <p className="px-5 py-10 text-center text-sm text-muted-foreground">
+                No vendors onboarded yet. Go to{' '}
+                <span className="font-medium text-foreground">Vendor intake</span> to upload a packet.
+              </p>
+            )}
             <ul className="divide-y divide-border">
               {vendors.map((v) => (
                 <li

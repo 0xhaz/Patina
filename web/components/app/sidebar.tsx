@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import {
   LayoutDashboard,
   Upload,
@@ -12,13 +13,14 @@ import {
 } from 'lucide-react'
 import { Logo } from '@/components/patina/logo'
 import { ThemeToggle } from '@/components/patina/theme-toggle'
+import { getReviewCount } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
 const nav = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Vendor intake', href: '/dashboard/intake', icon: Upload },
   { label: 'Pipeline', href: '/dashboard/pipeline', icon: GitBranch },
-  { label: 'Review queue', href: '/dashboard/review', icon: Inbox, count: 3 },
+  { label: 'Review queue', href: '/dashboard/review', icon: Inbox },
 ]
 
 const advanced = [
@@ -27,6 +29,17 @@ const advanced = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const [reviewCount, setReviewCount] = useState<number>(0)
+
+  useEffect(() => {
+    let alive = true
+    getReviewCount()
+      .then((n) => alive && setReviewCount(n))
+      .catch(() => alive && setReviewCount(0))
+    return () => {
+      alive = false
+    }
+  }, [pathname]) // refresh the badge on navigation (e.g. after approving)
 
   const renderItem = (item: {
     label: string
@@ -77,7 +90,11 @@ export function Sidebar() {
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
-        {nav.map(renderItem)}
+        {nav.map((item) =>
+          renderItem(
+            item.href === '/dashboard/review' ? { ...item, count: reviewCount } : item,
+          ),
+        )}
 
         <div className="mt-5 px-3">
           <span className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-tertiary">
