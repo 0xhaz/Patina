@@ -45,6 +45,43 @@ to zero as the agent recognizes repeated patterns:
 | **B** — trading‑name trap | **Exception** | `1, 0, 0, 0` | Stops crying wolf: repeat holder‑name mismatches become a note, not a flag |
 | **C** — expiring insurance | **Decay / invalidation** | `0, 1, 1, 0` | Knows when its own memory has gone stale |
 
+## How the memory works
+
+Patina does **two different jobs** on every packet; only the second is "memory."
+
+**1. Read & check (runs every time, no memory).**
+- **Extraction** — Qwen‑VL reads each of the three documents into structured fields *with a
+  per‑field confidence*: registration → entity name, tax/credit code, legal rep; bank →
+  account holder, account number; insurance → policy no, coverage, expiry.
+- **Validation** — deterministic rules cross‑check those fields *across the documents*: bank
+  **account holder** vs registered **entity name**, insurance **expiry** vs today, required
+  fields. This is what catches inconsistent or incomplete packets — plain rule‑checking.
+
+**2. Memory (the learning layer).** Memory does **not** re‑read the documents, and it does
+**not** fingerprint characters or pixels. It answers one question — *"have I seen this pattern
+before, and how was it handled?"* — to decide whether a flag is a **genuine novel problem** or
+something **already resolved**. Items are keyed on **structured attributes** (`country`,
+`doc_type`, `category`) plus a **semantic embedding** of a short description, and stored as
+distilled facts across four scopes:
+
+| Scope | Keyed on | What it learns |
+|---|---|---|
+| **Format** | country + `registration` | which jurisdictions' registration **layouts** it recognizes → a novel layout flags once, then is recognized |
+| **Exception** | country + `bank` | how a validation exception was resolved → a repeat trading‑name mismatch becomes a note, not a hard flag |
+| **Entity** | vendor identity | known vendors / duplicate detection |
+| **Episodic** | raw case | a log of past cases for retrieval |
+
+**Example (Chinese vendor).** Extraction reads the fields; validation passes (holder == entity,
+policy in date); Memory‑Consult finds **no CN registration format** → *novel* → flags for a
+human. On **approve**, the Learn stage writes a Format memory keyed *country=CN,
+doc_type=registration*. The **next** Chinese vendor matches that key → recognized →
+auto‑approved, and the memory is **reinforced** (relevance 60% → 80%). Expired insurance is the
+exception that *never* gets suppressed — hard‑invalidation always re‑flags it.
+
+**In one line:** Patina isn't matching characters or hunting for missing pages via memory — it
+**learns, per country and document type, which layouts it recognizes and which flagged
+exceptions a human already blessed**, so the same question is never asked twice.
+
 ## Architecture
 
 Full detail + diagrams (system topology, agent pipeline, memory engine) in
