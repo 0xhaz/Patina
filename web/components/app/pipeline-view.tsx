@@ -79,7 +79,10 @@ export function PipelineView() {
   }
 
   const v = detail?.vendor
-  const flagged = detail && detail.exceptions.length > 0
+  // Only offer to resolve when the vendor is actually still pending — a resolved /
+  // auto-approved vendor keeps its exceptions for audit, but shouldn't show Approve again.
+  const pending = !!v && (v.status === 'flagged' || v.status === 'needs-review')
+  const showExceptions = pending && !!detail && detail.exceptions.length > 0
 
   return (
     <div className="flex flex-col gap-6">
@@ -167,9 +170,9 @@ export function PipelineView() {
           {/* exceptions */}
           <div>
             <h2 className="mb-3 text-base font-medium text-foreground">
-              {flagged ? 'Exceptions to resolve' : 'Exceptions'}
+              {showExceptions ? 'Exceptions to resolve' : 'Exceptions'}
             </h2>
-            {flagged ? (
+            {showExceptions ? (
               <div className="flex flex-col gap-3">
                 {detail!.exceptions.map((exc) => (
                   <div key={exc.id} className="rounded-xl border border-border bg-card p-5">
@@ -227,8 +230,17 @@ export function PipelineView() {
                   <Check className="size-4" />
                 </span>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  <span className="font-medium text-foreground">No exceptions.</span> Onboarded in
-                  one pass — the format was recognized and every field cleared validation.
+                  {v.humanTouches > 0 ? (
+                    <>
+                      <span className="font-medium text-foreground">Resolved.</span> The exception
+                      was approved and written to memory — the next similar vendor won&apos;t need a human.
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-medium text-foreground">No exceptions.</span> Onboarded
+                      in one pass — the format was recognized and every field cleared validation.
+                    </>
+                  )}
                 </p>
               </div>
             )}
