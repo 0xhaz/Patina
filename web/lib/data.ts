@@ -334,6 +334,7 @@ export type MemoryItem = {
   lastUsed: string
   learned: string
   recalled: number
+  usedBy?: { id: string; name: string }[] // vendors this memory served
 }
 
 export const memoryItems: MemoryItem[] = [

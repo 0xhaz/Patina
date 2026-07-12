@@ -129,6 +129,7 @@ def memory_row_to_json(row: dict) -> dict:
     else:
         state = "decaying"
     rule = (row.get("payload") or {}).get("rule", "")
+    used_by = row.get("used_by") or []
     return {
         "id": str(row["id"]),
         "type": scope if scope in ("format", "exception", "entity") else "exception",
@@ -139,6 +140,7 @@ def memory_row_to_json(row: dict) -> dict:
         "lastUsed": _ago(row["last_used_at"]),
         "learned": _ago(row.get("created_at")),
         "recalled": row.get("use_count", 0),
+        "usedBy": used_by,  # [{id, name}] vendors this memory served
     }
 
 

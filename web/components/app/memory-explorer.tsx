@@ -82,7 +82,14 @@ function MemoryRow({
           {item.relevance}%
         </span>
       </div>
-      <p className="text-xs text-tertiary">Last used {item.lastUsed}</p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-tertiary">Last used {item.lastUsed}</p>
+        {item.usedBy && item.usedBy.length > 0 && (
+          <p className="text-xs font-medium text-verdigris">
+            Used by {item.usedBy.length} vendor{item.usedBy.length === 1 ? '' : 's'}
+          </p>
+        )}
+      </div>
     </button>
   )
 }
@@ -206,6 +213,23 @@ export function MemoryExplorer({ items }: { items?: MemoryItem[] }) {
               <dt className="text-muted-foreground">First learned</dt>
               <dd className="font-medium text-foreground">{selected.learned}</dd>
             </div>
+            {selected.usedBy && selected.usedBy.length > 0 && (
+              <div className="flex flex-col gap-1.5 border-t border-border pt-3">
+                <dt className="text-muted-foreground">
+                  Used by {selected.usedBy.length} vendor{selected.usedBy.length === 1 ? '' : 's'}
+                </dt>
+                <dd className="flex flex-wrap gap-1.5">
+                  {selected.usedBy.map((vd) => (
+                    <span
+                      key={vd.id}
+                      className="rounded-md bg-secondary px-2 py-0.5 text-xs text-foreground"
+                    >
+                      {vd.name}
+                    </span>
+                  ))}
+                </dd>
+              </div>
+            )}
           </dl>
 
           {selected.state === 'decaying' && (

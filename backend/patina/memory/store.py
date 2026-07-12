@@ -42,6 +42,7 @@ def add_memory(
     vendor_category: str | None = None,
     relevance: float = DEFAULT_RELEVANCE,
     last_used_at: datetime | None = None,  # override for tests / backdating
+    used_by: list | None = None,  # [{id, name}] vendors this memory was learned from
 ) -> int:
     """Insert a distilled memory item; returns its id."""
     with conn.cursor() as cur:
@@ -49,11 +50,11 @@ def add_memory(
             """
             INSERT INTO memory_items
                 (scope, country, doc_type, vendor_category, payload, embedding,
-                 relevance, last_used_at, use_count, created_at)
+                 relevance, last_used_at, use_count, used_by, created_at)
             VALUES
                 (%(scope)s, %(country)s, %(doc_type)s, %(vendor_category)s,
                  %(payload)s, %(embedding)s::vector,
-                 %(relevance)s, COALESCE(%(last_used_at)s, now()), 0, now())
+                 %(relevance)s, COALESCE(%(last_used_at)s, now()), 0, %(used_by)s, now())
             RETURNING id
             """,
             {
@@ -65,6 +66,7 @@ def add_memory(
                 "embedding": to_vector_literal(embedding),
                 "relevance": relevance,
                 "last_used_at": last_used_at,
+                "used_by": Json(used_by or []),
             },
         )
         item_id = cur.fetchone()[0]
@@ -72,25 +74,36 @@ def add_memory(
     return item_id
 
 
-def mark_used(conn: psycopg.Connection, item_id: int, scope: Scope) -> tuple[float, int]:
-    """Successful reuse: bump relevance (usefulness reset), refresh recency, count++.
-    Returns (new_relevance, new_use_count)."""
+def mark_used(
+    conn: psycopg.Connection,
+    item_id: int,
+    scope: Scope,
+    used_by_vendor: dict | None = None,
+) -> tuple[float, int]:
+    """Successful reuse: bump relevance (usefulness reset), refresh recency, count++,
+    and record the vendor that reused it (deduped by id). Returns (new_relevance, new_use_count)."""
     bump = SCOPE_CONFIG[scope]["bump"]
     with conn.cursor() as cur:
+        cur.execute("SELECT used_by FROM memory_items WHERE id = %s FOR UPDATE", (item_id,))
+        row = cur.fetchone()
+        used_by = (row[0] if row and row[0] else [])
+        if used_by_vendor and not any(u.get("id") == used_by_vendor.get("id") for u in used_by):
+            used_by = [*used_by, used_by_vendor]
         cur.execute(
             """
             UPDATE memory_items
                SET relevance    = LEAST(1.0, relevance + %(bump)s),
                    last_used_at = now(),
-                   use_count    = use_count + 1
+                   use_count    = use_count + 1,
+                   used_by      = %(used_by)s
              WHERE id = %(id)s
          RETURNING relevance, use_count
             """,
-            {"bump": bump, "id": item_id},
+            {"bump": bump, "used_by": Json(used_by), "id": item_id},
         )
-        row = cur.fetchone()
+        r = cur.fetchone()
     conn.commit()
-    return (row[0], row[1])
+    return (r[0], r[1])
 
 
 def invalidate(conn: psycopg.Connection, item_id: int) -> None:

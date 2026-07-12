@@ -18,8 +18,12 @@ CREATE TABLE IF NOT EXISTS memory_items (
     use_count       integer     NOT NULL DEFAULT 0,
     -- hard-invalidation layer (distinct from decay: 'known-wrong', not 'fading')
     invalidated_at  timestamptz,
+    used_by         jsonb       NOT NULL DEFAULT '[]'::jsonb,  -- [{id,name}] vendors this memory served
     created_at      timestamptz NOT NULL DEFAULT now()
 );
+
+-- Idempotent migration for tables created before used_by existed.
+ALTER TABLE memory_items ADD COLUMN IF NOT EXISTS used_by jsonb NOT NULL DEFAULT '[]'::jsonb;
 
 CREATE INDEX IF NOT EXISTS memory_items_scope_idx ON memory_items (scope);
 CREATE INDEX IF NOT EXISTS memory_items_struct_idx

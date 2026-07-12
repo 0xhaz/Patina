@@ -148,7 +148,7 @@ def memory() -> list[dict]:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT id, scope, payload, relevance, last_used_at, use_count, created_at
+                SELECT id, scope, payload, relevance, last_used_at, use_count, created_at, used_by
                 FROM memory_items WHERE invalidated_at IS NULL
                 ORDER BY relevance DESC, last_used_at DESC
                 """

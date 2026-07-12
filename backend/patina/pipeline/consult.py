@@ -53,9 +53,13 @@ def _format_recognized(conn: psycopg.Connection, st: PipelineState) -> bool:
         None,
     )
     if match is not None:
-        mem_store.mark_used(conn, match.id, "format")  # reinforce on successful reuse
+        mem_store.mark_used(conn, match.id, "format", used_by_vendor=_vendor_ref(st))
         return True
     return False
+
+
+def _vendor_ref(st: PipelineState) -> dict:
+    return {"id": st.vendor_id, "name": st.latin_name or st.entity_name or st.vendor_id}
 
 
 def _exception_recognized(conn: psycopg.Connection, st: PipelineState) -> MemoryNote | None:
@@ -65,7 +69,7 @@ def _exception_recognized(conn: psycopg.Connection, st: PipelineState) -> Memory
     )
     if hits and hits[0].final_score >= EXCEPTION_HIT_THRESHOLD:
         hit = hits[0]
-        rel, count = mem_store.mark_used(conn, hit.id, "exception")
+        rel, count = mem_store.mark_used(conn, hit.id, "exception", used_by_vendor=_vendor_ref(st))
         return MemoryNote(
             text=f"Known trading-name pattern — {hit.payload.get('rule', 'resolved as legitimate before')}",
             seen_count=count,
@@ -112,6 +116,7 @@ def learn_format(conn: psycopg.Connection, st: PipelineState) -> int:
                  "source": "human_confirmation"},
         embedding=llm.embed(_format_desc(st)),
         country=st.country, doc_type="registration", relevance=0.6,
+        used_by=[_vendor_ref(st)],
     )
 
 
@@ -122,4 +127,5 @@ def learn_exception(conn: psycopg.Connection, st: PipelineState) -> int:
                  "source": "human_resolution"},
         embedding=llm.embed(_exception_desc()),
         country=st.country, doc_type="bank", relevance=0.6,
+        used_by=[_vendor_ref(st)],
     )
