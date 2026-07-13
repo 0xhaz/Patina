@@ -4,8 +4,9 @@
 vendor move through the pipeline stages**, resolving the exception, and seeing the **memory
 compound** — all on live data (Vercel → Alibaba Function Compute → ApsaraDB RDS + Qwen).
 
-Headline **Scenario A** (CJK — plays to Qwen's strength and shows the agent learning two
-writing systems *separately*), with a fast Scenario B counter if time allows.
+Headline **Scenario A** (Chinese — **format memory**; plays to Qwen's CJK strength), then
+**Scenario B** (trading-name trap — **exception memory**) to show a *second, different* kind of
+learning: not recognizing a layout, but suppressing a false alarm.
 
 The demo files live in `demo_data/<scenario>/vendor_0N/` (each folder has
 `business_registration.png`, `bank_letter.png`, `insurance_certificate.png`). Drag all three
@@ -96,18 +97,19 @@ Re‑open **Memory explorer**.
 
 On screen: the same card — **80% · Reinforced · Times recalled 1.**
 
-### 2:25–2:45 — It learned Japanese *separately* (fast)
-On **Vendor intake**: upload vendor_03 (**Country = Japan**) → **flags again** → approve on
-**Pipeline**. Upload vendor_04 (**Country = Japan**) → **auto‑approved.**
+### 2:25–2:45 — A different kind of memory: it stops crying wolf (Scenario B)
+On **Vendor intake**: upload **B/vendor_01** (**Country = Malaysia**) → it **flags a trading-name
+mismatch** → approve on **Pipeline**. Then upload **B/vendor_03** (**Country = Malaysia**) →
+**auto-approved** with a suppressed-mismatch note.
 
-> "New writing system — Japanese. It flags once, learns the 履歴事項証明書 format, and the next
-> Japanese vendor sails through. It learned Chinese, then Japanese — *separately*."
+> "And it's not just document formats. This vendor banks under a *trading name* that differs from
+> its registered entity — a naive validator screams fraud every time. I approve it once as
+> legitimate, and the next trading-name mismatch is now just a quiet note, not a false alarm.
+> **It stopped crying wolf** — a second, different kind of memory."
 
-Flip to **Dashboard**: vendors and metrics have grown; human‑touches tell the story.
-
-*(Optional Scenario B, ~10s: upload B/vendor_01 [Malaysia] → flags a trading‑name mismatch →
-approve → upload B/vendor_03 → auto‑approved with a suppressed‑mismatch note. "It stopped
-crying wolf.")*
+Flip to **Dashboard**: vendors and metrics have grown; human-touches tell the story. *(The
+**Memory explorer** now holds **two** cards — a **Format** memory and an **Exception** memory —
+two distinct things the agent has learned.)*
 
 ### 2:45–3:00 — Close
 > "Under the hood: a custom memory engine — multi‑scoped, with purposeful decay and a hybrid
