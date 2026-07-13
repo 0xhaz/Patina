@@ -7,7 +7,7 @@ const links = [
   { label: 'Product', href: '#how' },
   { label: 'How it works', href: '#how' },
   { label: 'Memory', href: '#memory' },
-  { label: 'Docs', href: '#' },
+  { label: 'GitHub', href: 'https://github.com/0xhaz/Patina' },
 ]
 
 export function SiteNav() {
@@ -22,6 +22,9 @@ export function SiteNav() {
             <a
               key={l.label}
               href={l.href}
+              {...(l.href.startsWith('http')
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               {l.label}
