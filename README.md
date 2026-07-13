@@ -33,6 +33,10 @@ vector‑store wrapper. It is the product, the innovation, and the reason onboar
   usefulness** (spaced repetition); expired certs/superseded policies are *retired*, not faded.
 - **Multi‑signal hybrid retrieval** — semantic similarity **+** structured match **+** decay
   weight, combined in **one SQL query** over Postgres + pgvector.
+- **Evidence‑based human‑gate** — for a genuinely novel exception the agent gathers evidence
+  (business‑registry relationship + sanctions screening) and recommends a decision, so the human
+  confirms with facts. It distinguishes a legitimate **trading name** (approve) from a
+  **subsidiary** (escalate — a different legal entity) by registration number.
 
 ## The demo: compounding intelligence
 
@@ -42,7 +46,7 @@ to zero as the agent recognizes repeated patterns:
 | Scenario | Memory mechanism | Human‑touches per vendor | The beat |
 |---|---|---|---|
 | **A** — multilingual (Chinese + Japanese) | **Format** | `1, 0, 1, 0` | Learns Chinese 营业执照, then Japanese 履歴事項証明書 — *separately* |
-| **B** — trading‑name trap | **Exception** | `1, 0, 0, 0` | Stops crying wolf: repeat holder‑name mismatches become a note, not a flag |
+| **B** — trading‑name trap | **Exception** | `1, 0, 0, 0` | The agent **investigates** the mismatch (registry + sanctions; trading name vs subsidiary), the human confirms, and repeat legitimate mismatches become a note, not a flag — it stops crying wolf |
 | **C** — expiring insurance | **Decay / invalidation** | `0, 1, 1, 0` | Knows when its own memory has gone stale |
 
 ## How the memory works
