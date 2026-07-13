@@ -97,19 +97,36 @@ Re‑open **Memory explorer**.
 
 On screen: the same card — **80% · Reinforced · Times recalled 1.**
 
-### 2:25–2:45 — A different kind of memory: it stops crying wolf (Scenario B)
+### 2:25–2:45 — Due diligence, then it stops crying wolf (Scenario B)
 On **Vendor intake**: upload **B/vendor_01** (**Country = Malaysia**) → it **flags a trading-name
-mismatch** → approve on **Pipeline**. Then upload **B/vendor_03** (**Country = Malaysia**) →
-**auto-approved** with a suppressed-mismatch note.
+mismatch** (bank holder "BrightPath Supplies" ≠ registered "Brightpath Industrial"). You land on
+**Pipeline**.
 
-> "And it's not just document formats. This vendor banks under a *trading name* that differs from
-> its registered entity — a naive validator screams fraud every time. I approve it once as
-> legitimate, and the next trading-name mismatch is now just a quiet note, not a false alarm.
-> **It stopped crying wolf** — a second, different kind of memory."
+**Don't approve blind — click "Investigate" on the exception.**
 
-Flip to **Dashboard**: vendors and metrics have grown; human-touches tell the story. *(The
-**Memory explorer** now holds **two** cards — a **Format** memory and an **Exception** memory —
-two distinct things the agent has learned.)*
+> "How does a human know this is legitimate and not fraud? The agent checks — it looks up the
+> account holder in the business registry and screens sanctions."
+
+On screen: the Investigate panel shows **Recommend: Approve** — *"'BrightPath Supplies' is a
+registered trading name (DBA) of 'Brightpath Industrial' under the same registration; sanctions
+clear."* Now click **Approve & teach memory**.
+
+> "Same legal entity, just a trading name — approved with evidence, not a guess."
+
+Then upload **B/vendor_03** (**Country = Malaysia**) → **auto-approved** with a *"suppressed: seen 1×"* note.
+
+> "And the next trading-name mismatch is just a quiet note, not a false alarm. **It stopped crying
+> wolf** — a second, different kind of memory."
+
+**Optional counter-case (~15s) — it does NOT rubber-stamp mismatches.** Upload **_test/vendor_04**
+(a subsidiary case) → flags → **Investigate** → **Recommend: Escalate** — *"a SEPARATE legal entity
+(different registration), a subsidiary — payment authorization required."* Override, don't approve.
+
+> "A subsidiary is a different legal entity — the agent catches that and escalates instead of
+> waving it through. It's doing the diligence, not just flagging."
+
+Flip to **Dashboard**: vendors and metrics have grown. *(The **Memory explorer** now holds a
+**Format** memory and an **Exception** memory — two distinct things the agent has learned.)*
 
 ### 2:45–3:00 — Close
 > "Under the hood: a custom memory engine — multi‑scoped, with purposeful decay and a hybrid
@@ -127,14 +144,14 @@ Optional: flash the architecture diagram (`docs/architecture.md`).
 |---|---|
 | **Dashboard** | Counters + recent activity — the "before" (all zero) and the growth |
 | **Vendor intake** | Drop the three documents + country → run → hands off to the Pipeline page |
-| **Pipeline** | The vendor's run: **stage stepper**, extracted fields + confidence, exceptions, Approve/Override |
+| **Pipeline** | The vendor's run: **stage stepper**, extracted fields + confidence, exceptions, **Investigate** (registry + sanctions evidence → recommendation), Approve/Override |
 | **Review queue** | The human's **triage inbox** — only pending exceptions; each row links into its Pipeline run (badge ticks live). Approve/Override happens on the Pipeline |
 | **Memory explorer** | The learned store; a card is **created** (60%) then **reinforced** (80%, recalled 1) |
 
 ## Practice packets (test before recording)
 
 ```bash
-python3 demo_data/generate_test.py        # writes demo_data/_test/vendor_01..03
+python3 demo_data/generate_test.py        # writes demo_data/_test/vendor_01..04
 ```
 
 | Packet | Country | Behaviour |
@@ -142,6 +159,7 @@ python3 demo_data/generate_test.py        # writes demo_data/_test/vendor_01..03
 | `_test/vendor_01` | China | novel if memory empty → flags; recognized once CN format learned |
 | `_test/vendor_02` | Malaysia | bank‑holder mismatch → flags (unless MY exception already learned → note) |
 | `_test/vendor_03` | Singapore | insurance **expired** → **always flags**, regardless of memory |
+| `_test/vendor_04` | Malaysia | **subsidiary** bank holder → flags; **Investigate → Escalate** (not approve) |
 
 `vendor_03` is the reliable "always flags" test. To rehearse the full **flag → approve →
 next‑one‑recognized** loop, `demo_control clear` first.
