@@ -2,18 +2,23 @@ import Link from 'next/link'
 import { Logo } from '@/components/patina/logo'
 import { Button } from '@/components/ui/button'
 
-const columns = [
+const columns: { heading: string; links: { label: string; href?: string }[] }[] = [
   {
     heading: 'Product',
-    links: ['How it works', 'Memory', 'Pricing', 'Docs'],
+    links: [
+      { label: 'How it works' },
+      { label: 'Memory' },
+      { label: 'Pricing' },
+      { label: 'GitHub', href: 'https://github.com/0xhaz/Patina' },
+    ],
   },
   {
     heading: 'Company',
-    links: ['About', 'Customers', 'Careers', 'Contact'],
+    links: [{ label: 'About' }, { label: 'Customers' }, { label: 'Careers' }, { label: 'Contact' }],
   },
   {
     heading: 'Legal',
-    links: ['Privacy', 'Terms', 'Security', 'DPA'],
+    links: [{ label: 'Privacy' }, { label: 'Terms' }, { label: 'Security' }, { label: 'DPA' }],
   },
 ]
 
@@ -56,12 +61,15 @@ export function Closing() {
                 </p>
                 <ul className="mt-4 flex flex-col gap-2.5">
                   {col.links.map((link) => (
-                    <li key={link}>
+                    <li key={link.label}>
                       <a
-                        href="#"
+                        href={link.href ?? '#'}
+                        {...(link.href
+                          ? { target: '_blank', rel: 'noopener noreferrer' }
+                          : {})}
                         className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                       >
-                        {link}
+                        {link.label}
                       </a>
                     </li>
                   ))}
