@@ -75,6 +75,32 @@ export async function getVendorDetail(id: string): Promise<VendorDetail | null> 
   return get<VendorDetail | null>(`/api/vendors/${id}`, null)
 }
 
+export type Investigation = {
+  type: string
+  result: null | {
+    entity_name: string
+    account_holder: string
+    relationship: 'trading_name' | 'subsidiary' | 'unrelated' | 'unknown'
+    entity_registration: string | null
+    holder_registration: string | null
+    parent: string | null
+    sanctions_hit: boolean
+    recommendation: 'approve' | 'escalate' | 'reject'
+    rationale: string
+    evidence: string[]
+  }
+}
+
+export async function investigateVendor(id: string): Promise<Investigation | null> {
+  try {
+    const res = await fetch(`${BASE}/api/vendors/${id}/investigate`, { method: 'POST' })
+    if (!res.ok) return null
+    return (await res.json()) as Investigation
+  } catch {
+    return null
+  }
+}
+
 export async function resolveVendor(id: string, rejections: string[] = []): Promise<void> {
   try {
     await fetch(`${BASE}/api/vendors/${id}/resolve`, {

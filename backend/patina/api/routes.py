@@ -111,6 +111,22 @@ async def onboard(
     return mappers.state_to_detail(st)
 
 
+@router.post("/vendors/{vendor_id}/investigate")
+def investigate_vendor(vendor_id: str) -> dict:
+    """Gather evidence for a bank-holder mismatch: registry relationship (trading name vs
+    subsidiary vs unrelated) + sanctions, with a recommendation the human can act on."""
+    from patina.tools.registry import assess_holder
+
+    with db.connect() as conn:
+        st = pstore.load(conn, vendor_id)
+    if st is None:
+        raise HTTPException(404, f"vendor {vendor_id} not found")
+    facts = st.facts
+    if not (facts and facts.entity_name and facts.account_holder):
+        return {"type": "none", "result": None}
+    return {"type": "holder", "result": assess_holder(facts.entity_name, facts.account_holder)}
+
+
 @router.get("/review-queue")
 def review_queue() -> list[dict]:
     """[{vendor, exception}] for every vendor still awaiting a human decision."""

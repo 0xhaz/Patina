@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Sparkles, Check, AlertTriangle, Loader2, PenLine } from 'lucide-react'
+import { Sparkles, Check, AlertTriangle, Loader2, PenLine, Search, ShieldAlert } from 'lucide-react'
 import { PipelineStepper } from '@/components/app/pipeline-stepper'
 import { FieldTable } from '@/components/app/field-table'
 import { StatusPill } from '@/components/patina/status-pill'
@@ -9,10 +9,19 @@ import { Button } from '@/components/ui/button'
 import {
   getVendorDetail,
   getVendors,
+  investigateVendor,
   resolveVendor,
+  type Investigation,
   type VendorDetail,
 } from '@/lib/api'
+import { cn } from '@/lib/utils'
 import type { Vendor } from '@/lib/data'
+
+const RECO = {
+  approve: { label: 'Recommend: Approve', className: 'bg-success/10 text-success border-success/25' },
+  escalate: { label: 'Recommend: Escalate', className: 'bg-warning/10 text-warning border-warning/30' },
+  reject: { label: 'Recommend: Reject', className: 'bg-danger/10 text-danger border-danger/25' },
+} as const
 
 // Map the backend status to the stepper position (7 stages, index 0-6).
 function activeStep(status: string): number {
@@ -25,6 +34,8 @@ export function PipelineView() {
   const [detail, setDetail] = useState<VendorDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [resolving, setResolving] = useState(false)
+  const [investigation, setInvestigation] = useState<Investigation['result']>(null)
+  const [investigating, setInvestigating] = useState(false)
 
   const loadVendors = useCallback(async () => {
     const list = await getVendors()
@@ -49,12 +60,21 @@ export function PipelineView() {
   }, [loadVendors])
 
   useEffect(() => {
+    setInvestigation(null) // clear evidence when switching vendors
     if (!selectedId) {
       setDetail(null)
       return
     }
     getVendorDetail(selectedId).then(setDetail)
   }, [selectedId])
+
+  async function investigate() {
+    if (!detail) return
+    setInvestigating(true)
+    const res = await investigateVendor(detail.vendor.id)
+    setInvestigation(res?.result ?? null)
+    setInvestigating(false)
+  }
 
   async function approve(rejections: string[] = []) {
     if (!detail) return
@@ -211,6 +231,52 @@ export function PipelineView() {
                       <p className="mt-3 text-xs font-medium text-tertiary">
                         No precedent in memory yet — a genuinely novel exception.
                       </p>
+                    )}
+                    {exc.code === 'bank_holder_mismatch' && (
+                      <div className="mt-3">
+                        {!investigation ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={investigating}
+                            onClick={investigate}
+                          >
+                            {investigating ? <Loader2 className="animate-spin" /> : <Search />}
+                            {investigating ? 'Investigating…' : 'Investigate (registry + sanctions)'}
+                          </Button>
+                        ) : (
+                          <div className="rounded-lg border border-border bg-secondary/40 p-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span
+                                className={cn(
+                                  'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium',
+                                  RECO[investigation.recommendation].className,
+                                )}
+                              >
+                                <ShieldAlert className="size-3" />
+                                {RECO[investigation.recommendation].label}
+                              </span>
+                              <span className="text-xs capitalize text-muted-foreground">
+                                {investigation.relationship.replace('_', ' ')}
+                              </span>
+                            </div>
+                            <p className="mt-2 text-sm leading-relaxed text-foreground">
+                              {investigation.rationale}
+                            </p>
+                            <ul className="mt-2 flex flex-col gap-1">
+                              {investigation.evidence.map((ev, i) => (
+                                <li
+                                  key={i}
+                                  className="flex items-start gap-1.5 text-xs text-muted-foreground"
+                                >
+                                  <Check className="mt-0.5 size-3 shrink-0 text-verdigris" />
+                                  {ev}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}

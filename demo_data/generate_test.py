@@ -62,6 +62,20 @@ VENDORS = [
             "policy_expiry": "15 Mar 2026",  # EXPIRED (before pinned today 20 Jun 2026)
         },
     },
+    {
+        "seq": 4,
+        "entity_name": "Northgate Holdings Sdn Bhd",
+        "country_hint": "MY",
+        "ground_truth": {
+            "tax_id": "C20661009900",
+            # SUBSIDIARY (separate legal entity) → Investigate recommends ESCALATE, not approve
+            "account_holder": "Northgate Components Sdn Bhd",
+            "account_no": "3-88102-88300",
+            "policy_no": "AZ-CGL-50990",
+            "coverage": "USD 2,000,000",
+            "policy_expiry": "01 Apr 2027",
+        },
+    },
 ]
 
 
